@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Guía interactiva completa sobre Scrum: aprende los conceptos básicos con juegos y actividades dinámicas">
+  <title>Guía Interactiva de Scrum</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+
+<body>
+  <!-- HERO -->
+  <header class="hero">
+    <nav class="navbar">
+      <div class="nav-logo">🛸 ScrumGuide</div>
+      <ul class="nav-links">
+        <li><a href="#que-es">¿Qué es?</a></li>
+        <li><a href="#roles">Roles</a></li>
+        <li><a href="#eventos">Eventos</a></li>
+        <li><a href="#artefactos">Artefactos</a></li>
+        <li><a href="#juegos">Juegos</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
+    </nav>
+    <div class="hero-content">
+      <span class="hero-badge">Guía Interactiva 2026</span>
+      <h1>Aprende <span class="gradient-text">Scrum</span><br>de forma divertida</h1>
+      <p class="hero-sub">Domina el framework ágil más popular del mundo con actividades interactivas, juegos y ejemplos
+        prácticos.</p>
+      <a href="#que-es" class="cta-btn">Comenzar ahora →</a>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">4</span><span class="stat-lbl">Módulos</span></div>
+        <div class="stat"><span class="stat-num">5+</span><span class="stat-lbl">Juegos</span></div>
+        <div class="stat"><span class="stat-num">100%</span><span class="stat-lbl">Interactivo</span></div>
+      </div>
+    </div>
+    <div class="hero-shape"></div>
+  </header>
+
+  <!-- PROGRESO -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- SECCIÓN 1: QUÉ ES SCRUM -->
+  <section id="que-es" class="section">
+    <div class="container">
+      <div class="section-tag">Módulo 1</div>
+      <h2 class="section-title">¿Qué es <span class="gradient-text">Scrum</span>?</h2>
+      <p class="section-desc">Scrum es un framework ágil para gestionar y desarrollar productos complejos de forma
+        iterativa e incremental.</p>
+
+      <div class="cards-grid">
+        <div class="info-card" data-aos="up">
+          <div class="card-icon">♾️</div>
+          <h3>Iterativo</h3>
+          <p>El trabajo se divide en ciclos cortos llamados <strong>Sprints</strong> (1–4 semanas), permitiendo entregas
+            frecuentes y mejora continua.</p>
+        </div>
+        <div class="info-card" data-aos="up" style="--delay:.1s">
+          <div class="card-icon">🫂</div>
+          <h3>Colaborativo</h3>
+          <p>Equipos pequeños y autoorganizados trabajan juntos con roles bien definidos para maximizar la
+            productividad.</p>
+        </div>
+        <div class="info-card" data-aos="up" style="--delay:.2s">
+          <div class="card-icon">🔭</div>
+          <h3>Transparente</h3>
+          <p>Todo el proceso es visible para todos. Se inspeccionan y adaptan constantemente los resultados y el
+            proceso.</p>
+        </div>
+      </div>
+
+      <!-- PILARES -->
+      <div class="pillars">
+        <h3 class="subsection-title">Los 3 Pilares de Scrum</h3>
+        <div class="pillars-grid">
+          <div class="pillar-card pillar-blue">
+            <div class="pillar-icon">🪬</div>
+            <h4>Transparencia</h4>
+            <p>Todos ven el estado real del trabajo y los impedimentos.</p>
+          </div>
+          <div class="pillar-card pillar-purple">
+            <div class="pillar-icon">🧬</div>
+            <h4>Inspección</h4>
+            <p>El equipo revisa constantemente el progreso hacia las metas.</p>
+          </div>
+          <div class="pillar-card pillar-pink">
+            <div class="pillar-icon">⚗️</div>
+            <h4>Adaptación</h4>
+            <p>Si algo no funciona, el equipo ajusta el proceso y el plan.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALORES -->
+      <div class="values-section">
+        <h3 class="subsection-title">Los 5 Valores de Scrum</h3>
+        <div class="values-grid">
+          <div class="value-chip" id="v1" onclick="toggleValue(this)"><span>🦾</span> Compromiso</div>
+          <div class="value-chip" id="v2" onclick="toggleValue(this)"><span>🌟</span> Foco</div>
+          <div class="value-chip" id="v3" onclick="toggleValue(this)"><span>🌊</span> Apertura</div>
+          <div class="value-chip" id="v4" onclick="toggleValue(this)"><span>🫶</span> Respeto</div>
+          <div class="value-chip" id="v5" onclick="toggleValue(this)"><span>🔥</span> Coraje</div>
+        </div>
+        <div class="value-desc" id="valueDesc">🖱️ Haz clic en un valor para conocer más</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 2: ROLES -->
+  <section id="roles" class="section section-dark">
+    <div class="container">
+      <div class="section-tag">Módulo 2</div>
+      <h2 class="section-title">Los <span class="gradient-text">Roles</span> de Scrum</h2>
+      <p class="section-desc">El Scrum Team está compuesto por tres roles complementarios y sin jerarquía entre ellos.
+      </p>
+
+      <div class="roles-grid">
+        <div class="role-card role-po">
+          <div class="role-avatar">🧑‍💼</div>
+          <h3>Product Owner</h3>
+          <ul class="role-list">
+            <li>Representa al cliente y negocio</li>
+            <li>Gestiona el Product Backlog</li>
+            <li>Prioriza las funcionalidades</li>
+            <li>Define la visión del producto</li>
+            <li>Acepta o rechaza el trabajo completado</li>
+          </ul>
+          <div class="role-tag">PO</div>
+        </div>
+        <div class="role-card role-sm">
+          <div class="role-avatar">🪄</div>
+          <h3>Scrum Master</h3>
+          <ul class="role-list">
+            <li>Facilita los eventos Scrum</li>
+            <li>Elimina impedimentos del equipo</li>
+            <li>Protege al equipo de interrupciones</li>
+            <li>Promueve la cultura ágil</li>
+            <li>Sirve al equipo y a la organización</li>
+          </ul>
+          <div class="role-tag">SM</div>
+        </div>
+        <div class="role-card role-dev">
+          <div class="role-avatar">🧩</div>
+          <h3>Developers</h3>
+          <ul class="role-list">
+            <li>Crea el Incremento del producto</li>
+            <li>Autogestiona su trabajo diario</li>
+            <li>Participa en todos los eventos</li>
+            <li>Define la Definition of Done</li>
+            <li>Equipo multifuncional (3–9 personas)</li>
+          </ul>
+          <div class="role-tag">DEV</div>
+        </div>
+      </div>
+
+      <!-- JUEGO: RELACIONAR COLUMNAS -->
+      <div class="game-box" id="juego-roles">
+        <div class="game-header">
+          <span class="game-icon">🕹️</span>
+          <h3>Juego: Relaciona el Rol con su Responsabilidad</h3>
+        </div>
+        <p class="game-desc">Arrastra cada responsabilidad al rol correcto</p>
+        <div class="match-game" id="matchGame">
+          <div class="match-items">
+            <div class="match-item" draggable="true" id="mi1" data-ans="po" ondragstart="dragStart(event)">🗃️ Gestiona el backlog</div>
+            <div class="match-item" draggable="true" id="mi2" data-ans="sm" ondragstart="dragStart(event)">🪤 Elimina impedimentos</div>
+            <div class="match-item" draggable="true" id="mi3" data-ans="dev" ondragstart="dragStart(event)">⚙️ Crea el incremento</div>
+            <div class="match-item" draggable="true" id="mi4" data-ans="po" ondragstart="dragStart(event)">🧮 Define prioridades</div>
+            <div class="match-item" draggable="true" id="mi5" data-ans="sm" ondragstart="dragStart(event)">🪄 Facilita eventos</div>
+            <div class="match-item" draggable="true" id="mi6" data-ans="dev" ondragstart="dragStart(event)">📐 Define DoD</div>
+          </div>
+          <div class="match-zones">
+            <div class="match-zone" data-role="po" ondragover="dragOver(event)" ondrop="dropItem(event)">
+              <div class="zone-label">🧑‍💼 Product Owner</div>
+              <div class="zone-drop"></div>
+            </div>
+            <div class="match-zone" data-role="sm" ondragover="dragOver(event)" ondrop="dropItem(event)">
+              <div class="zone-label">🪄 Scrum Master</div>
+              <div class="zone-drop"></div>
+            </div>
+            <div class="match-zone" data-role="dev" ondragover="dragOver(event)" ondrop="dropItem(event)">
+              <div class="zone-label">🧩 Developers</div>
+              <div class="zone-drop"></div>
+            </div>
+          </div>
+        </div>
+        <div class="game-result" id="matchResult"></div>
+        <button class="btn-check" onclick="checkMatch()">✅ Verificar</button>
+        <button class="btn-reset" onclick="resetMatch()">🔄 Reiniciar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 3: EVENTOS -->
+  <section id="eventos" class="section">
+    <div class="container">
+      <div class="section-tag">Módulo 3</div>
+      <h2 class="section-title">Los <span class="gradient-text">Eventos</span> de Scrum</h2>
+      <p class="section-desc">Scrum tiene 5 eventos formales que crean regularidad y reducen la necesidad de reuniones
+        no planificadas.</p>
+
+      <!-- TIMELINE -->
+      <div class="timeline">
+        <div class="timeline-item" onclick="openModal('sprint')">
+          <div class="timeline-dot tl-1">🚀</div>
+          <div class="timeline-content">
+            <h4>Sprint</h4>
+            <p>El corazón de Scrum · 1–4 semanas</p>
+            <span class="tl-more">Ver más →</span>
+          </div>
+        </div>
+        <div class="timeline-item" onclick="openModal('planning')">
+          <div class="timeline-dot tl-2">🗺️</div>
+          <div class="timeline-content">
+            <h4>Sprint Planning</h4>
+            <p>Planificación del sprint · Máx 8h</p>
+            <span class="tl-more">Ver más →</span>
+          </div>
+        </div>
+        <div class="timeline-item" onclick="openModal('daily')">
+          <div class="timeline-dot tl-3">🌅</div>
+          <div class="timeline-content">
+            <h4>Daily Scrum</h4>
+            <p>Sincronización diaria · 15 minutos</p>
+            <span class="tl-more">Ver más →</span>
+          </div>
+        </div>
+        <div class="timeline-item" onclick="openModal('review')">
+          <div class="timeline-dot tl-4">🔬</div>
+          <div class="timeline-content">
+            <h4>Sprint Review</h4>
+            <p>Revisión del incremento · Máx 4h</p>
+            <span class="tl-more">Ver más →</span>
+          </div>
+        </div>
+        <div class="timeline-item" onclick="openModal('retro')">
+          <div class="timeline-dot tl-5">🌱</div>
+          <div class="timeline-content">
+            <h4>Retrospectiva</h4>
+            <p>Mejora continua · Máx 3h</p>
+            <span class="tl-more">Ver más →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- JUEGO QUIZ EVENTOS -->
+      <div class="game-box">
+        <div class="game-header">
+          <span class="game-icon">💫</span>
+          <h3>Quiz: ¿Conoces los Eventos?</h3>
+        </div>
+        <div id="quizContainer">
+          <div class="quiz-question" id="quizQ"></div>
+          <div class="quiz-options" id="quizOpts"></div>
+          <div class="quiz-feedback" id="quizFb"></div>
+          <div class="quiz-progress-wrap">
+            <div class="quiz-progress-inner" id="quizProg"></div>
+          </div>
+          <div class="quiz-score" id="quizScore"></div>
+        </div>
+        <button class="btn-check" onclick="nextQuiz()">Siguiente →</button>
+        <button class="btn-reset" onclick="resetQuiz()">🔄 Reiniciar Quiz</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 4: ARTEFACTOS -->
+  <section id="artefactos" class="section section-dark">
+    <div class="container">
+      <div class="section-tag">Módulo 4</div>
+      <h2 class="section-title">Los <span class="gradient-text">Artefactos</span> de Scrum</h2>
+      <p class="section-desc">Los artefactos representan trabajo o valor y están diseñados para maximizar la
+        transparencia.</p>
+
+      <div class="artifacts-grid">
+        <div class="artifact-card" id="art1">
+          <div class="artifact-header ah-1">
+            <span class="artifact-icon">🗃️</span>
+            <h3>Product Backlog</h3>
+          </div>
+          <div class="artifact-body">
+            <p>Lista ordenada de todo lo que se necesita en el producto. Es la <strong>única fuente de trabajo</strong>
+              para el Scrum Team.</p>
+            <div class="artifact-commitment">
+              <strong>Compromiso:</strong> 🌐 Product Goal
+            </div>
+            <ul class="artifact-list">
+              <li>Gestionado por el Product Owner</li>
+              <li>Nunca está completo</li>
+              <li>Contiene historias de usuario</li>
+            </ul>
+          </div>
+        </div>
+        <div class="artifact-card" id="art2">
+          <div class="artifact-header ah-2">
+            <span class="artifact-icon">📌</span>
+            <h3>Sprint Backlog</h3>
+          </div>
+          <div class="artifact-body">
+            <p>Subconjunto del Product Backlog seleccionado para el Sprint actual + el plan para entregarlo.</p>
+            <div class="artifact-commitment">
+              <strong>Compromiso:</strong> 🎪 Sprint Goal
+            </div>
+            <ul class="artifact-list">
+              <li>Creado por los Developers</li>
+              <li>Actualizado diariamente</li>
+              <li>Refleja el trabajo restante</li>
+            </ul>
+          </div>
+        </div>
+        <div class="artifact-card" id="art3">
+          <div class="artifact-header ah-3">
+            <span class="artifact-icon">🏆</span>
+            <h3>Incremento</h3>
+          </div>
+          <div class="artifact-body">
+            <p>Suma de todos los ítems del Product Backlog completados durante el Sprint. Debe ser usable y cumplir la
+              DoD.</p>
+            <div class="artifact-commitment">
+              <strong>Compromiso:</strong> 🧪 Definition of Done
+            </div>
+            <ul class="artifact-list">
+              <li>Potencialmente entregable</li>
+              <li>Cumple la Definition of Done</li>
+              <li>Puede haber múltiples por sprint</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- JUEGO: VERDADERO O FALSO -->
+      <div class="game-box">
+        <div class="game-header">
+          <span class="game-icon">⚖️</span>
+          <h3>Juego: Verdadero o Falso</h3>
+        </div>
+        <div id="tfGame">
+          <div class="tf-question" id="tfQ"></div>
+          <div class="tf-btns">
+            <button class="tf-btn tf-true" onclick="tfAnswer(true)">✅ Verdadero</button>
+            <button class="tf-btn tf-false" onclick="tfAnswer(false)">❌ Falso</button>
+          </div>
+          <div class="tf-feedback" id="tfFb"></div>
+          <div class="quiz-progress-wrap" style="margin-top:1rem">
+            <div class="quiz-progress-inner" id="tfProg"></div>
+          </div>
+          <div class="quiz-score" id="tfScore"></div>
+        </div>
+        <button class="btn-reset" onclick="resetTF()">🔄 Reiniciar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 5: JUEGOS EXTRA -->
+  <section id="juegos" class="section">
+    <div class="container">
+      <div class="section-tag">Módulo 5</div>
+      <h2 class="section-title">Zona de <span class="gradient-text">Juegos</span></h2>
+      <p class="section-desc">Pon a prueba todo lo que aprendiste con estos desafíos interactivos.</p>
+
+      <!-- ORDENAR EL SPRINT -->
+      <div class="game-box">
+        <div class="game-header">
+          <span class="game-icon">🎲</span>
+          <h3>Ordena el Sprint: ¿Cuál es el orden correcto?</h3>
+        </div>
+        <p class="game-desc">Arrastra los eventos para ordenarlos correctamente dentro de un Sprint.</p>
+        <div class="sort-game" id="sortGame">
+          <div class="sort-item" draggable="true" id="se1" data-order="3" ondragstart="sortDrag(event)"
+            ondragover="sortOver(event)" ondrop="sortDrop(event)">🌅 Daily Scrum</div>
+          <div class="sort-item" draggable="true" id="se2" data-order="1" ondragstart="sortDrag(event)"
+            ondragover="sortOver(event)" ondrop="sortDrop(event)">🗺️ Sprint Planning</div>
+          <div class="sort-item" draggable="true" id="se3" data-order="4" ondragstart="sortDrag(event)"
+            ondragover="sortOver(event)" ondrop="sortDrop(event)">🔬 Sprint Review</div>
+          <div class="sort-item" draggable="true" id="se4" data-order="2" ondragstart="sortDrag(event)"
+            ondragover="sortOver(event)" ondrop="sortDrop(event)">🚀 Sprint (ejecución)</div>
+          <div class="sort-item" draggable="true" id="se5" data-order="5" ondragstart="sortDrag(event)"
+            ondragover="sortOver(event)" ondrop="sortDrop(event)">🌱 Retrospectiva</div>
+        </div>
+        <div class="game-result" id="sortResult"></div>
+        <button class="btn-check" onclick="checkSort()">✅ Verificar Orden</button>
+        <button class="btn-reset" onclick="resetSort()">🔄 Mezclar</button>
+      </div>
+
+      <!-- COMPLETAR LA FRASE -->
+      <div class="game-box">
+        <div class="game-header">
+          <span class="game-icon">🖊️</span>
+          <h3>Completa la Frase</h3>
+        </div>
+        <div id="fillGame">
+          <div class="fill-question" id="fillQ"></div>
+          <div class="fill-options" id="fillOpts"></div>
+          <div class="fill-feedback" id="fillFb"></div>
+          <div class="quiz-score" id="fillScore"></div>
+        </div>
+        <button class="btn-reset" onclick="resetFill()">🔄 Reiniciar</button>
+      </div>
+
+      <!-- TABLA RESUMEN -->
+      <div class="game-box">
+        <div class="game-header">
+          <span class="game-icon">📈</span>
+          <h3>Resumen Completo de Scrum</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="scrum-table">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Elemento</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="tr-role">
+                <td rowspan="3">🫂 Roles</td>
+                <td>Product Owner</td>
+                <td>Maximiza el valor del producto</td>
+              </tr>
+              <tr class="tr-role">
+                <td>Scrum Master</td>
+                <td>Facilita y protege al equipo</td>
+              </tr>
+              <tr class="tr-role">
+                <td>Developers</td>
+                <td>Crean el incremento</td>
+              </tr>
+              <tr class="tr-event">
+                <td rowspan="5">🗓️ Eventos</td>
+                <td>Sprint</td>
+                <td>Ciclo iterativo de 1–4 semanas</td>
+              </tr>
+              <tr class="tr-event">
+                <td>Sprint Planning</td>
+                <td>Planifica el trabajo del sprint</td>
+              </tr>
+              <tr class="tr-event">
+                <td>Daily Scrum</td>
+                <td>Sincronización diaria de 15 min</td>
+              </tr>
+              <tr class="tr-event">
+                <td>Sprint Review</td>
+                <td>Revisión del incremento</td>
+              </tr>
+              <tr class="tr-event">
+                <td>Retrospectiva</td>
+                <td>Mejora del proceso</td>
+              </tr>
+              <tr class="tr-art">
+                <td rowspan="3">🗃️ Artefactos</td>
+                <td>Product Backlog</td>
+                <td>Lista priorizada de funcionalidades</td>
+              </tr>
+              <tr class="tr-art">
+                <td>Sprint Backlog</td>
+                <td>Trabajo seleccionado para el sprint</td>
+              </tr>
+              <tr class="tr-art">
+                <td>Incremento</td>
+                <td>Resultado entregable del sprint</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">🛸 ScrumGuide</div>
+      <p class="footer-desc">Una guía interactiva para aprender Scrum de manera simple y divertida.</p>
+      <div class="footer-links">
+        <a href="#que-es">¿Qué es Scrum?</a>
+        <a href="#roles">Roles</a>
+        <a href="#eventos">Eventos</a>
+        <a href="#artefactos">Artefactos</a>
+        <a href="#juegos">Juegos</a>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <span>Desarrollado con 💜 por <strong>Vivian Arias</strong></span>
+        <span>© 2026 Guía Interactiva de Scrum</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
