@@ -170,12 +170,18 @@
         <p class="game-desc">Arrastra cada responsabilidad al rol correcto</p>
         <div class="match-game" id="matchGame">
           <div class="match-items">
-            <div class="match-item" draggable="true" id="mi1" data-ans="po" ondragstart="dragStart(event)">🗃️ Gestiona el backlog</div>
-            <div class="match-item" draggable="true" id="mi2" data-ans="sm" ondragstart="dragStart(event)">🪤 Elimina impedimentos</div>
-            <div class="match-item" draggable="true" id="mi3" data-ans="dev" ondragstart="dragStart(event)">⚙️ Crea el incremento</div>
-            <div class="match-item" draggable="true" id="mi4" data-ans="po" ondragstart="dragStart(event)">🧮 Define prioridades</div>
-            <div class="match-item" draggable="true" id="mi5" data-ans="sm" ondragstart="dragStart(event)">🪄 Facilita eventos</div>
-            <div class="match-item" draggable="true" id="mi6" data-ans="dev" ondragstart="dragStart(event)">📐 Define DoD</div>
+            <div class="match-item" draggable="true" id="mi1" data-ans="po" ondragstart="dragStart(event)">🗃️ Gestiona
+              el backlog</div>
+            <div class="match-item" draggable="true" id="mi2" data-ans="sm" ondragstart="dragStart(event)">🪤 Elimina
+              impedimentos</div>
+            <div class="match-item" draggable="true" id="mi3" data-ans="dev" ondragstart="dragStart(event)">⚙️ Crea el
+              incremento</div>
+            <div class="match-item" draggable="true" id="mi4" data-ans="po" ondragstart="dragStart(event)">🧮 Define
+              prioridades</div>
+            <div class="match-item" draggable="true" id="mi5" data-ans="sm" ondragstart="dragStart(event)">🪄 Facilita
+              eventos</div>
+            <div class="match-item" draggable="true" id="mi6" data-ans="dev" ondragstart="dragStart(event)">📐 Define
+              DoD</div>
           </div>
           <div class="match-zones">
             <div class="match-zone" data-role="po" ondragover="dragOver(event)" ondrop="dropItem(event)">
@@ -524,11 +530,13 @@
   <div class="modal-overlay" id="completeProfileOverlay">
     <div class="modal-box" style="max-width:350px">
       <h3 style="margin-bottom:1rem">¡Casi listo! 🚀</h3>
-      <p style="margin-bottom:1.5rem; color:var(--text2)">Para completar tu registro, por favor ingresa tu número de grupo:</p>
+      <p style="margin-bottom:1.5rem; color:var(--text2)">Para completar tu registro, por favor ingresa tu número de
+        grupo:</p>
       <div class="input-group">
         <input type="text" id="googleGroupCode" placeholder="Ej: Grupo 04">
       </div>
-      <button class="cta-btn" style="width:100%; border:none; margin-top:1rem" onclick="saveGoogleExtraData()">Guardar y Continuar</button>
+      <button class="cta-btn" style="width:100%; border:none; margin-top:1rem" onclick="saveGoogleExtraData()">Guardar y
+        Continuar</button>
     </div>
   </div>
 
@@ -610,7 +618,7 @@
     const db = getDatabase(app);
     window.firebaseAuth = { auth, db, ref, set, push, onValue, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup };
   </script>
-  <script src="app.js"></script>
+  <script src="app.js?v=1.0.3"></script>
 </body>
 
 </html>
