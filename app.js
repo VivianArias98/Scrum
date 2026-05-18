@@ -101,6 +101,7 @@ function renderQuiz(){
     document.getElementById('quizOpts').innerHTML='';
     document.getElementById('quizScore').textContent=`Puntuación final: ${qScore}/${quizData.length}`;
     document.getElementById('quizProg').style.width='100%';
+    saveScore('quiz_scrum', qScore, quizData.length);
     return;
   }
   const q=quizData[qIdx];
@@ -149,6 +150,7 @@ function renderTF(){
     document.getElementById('tfFb').textContent='';
     document.getElementById('tfScore').textContent=`Puntuación: ${tfScore}/${tfData.length}`;
     document.getElementById('tfProg').style.width='100%';
+    saveScore('verdad_falso', tfScore, tfData.length);
     return;
   }
   document.getElementById('tfQ').textContent=`${tfIdx+1}/${tfData.length}. ${tfData[tfIdx].q}`;
@@ -194,7 +196,11 @@ function checkSort(){
     else item.classList.add('wrong-pos');
   });
   const r=document.getElementById('sortResult');
-  if(correct===5){r.innerHTML='🥳 ¡Orden perfecto!';r.style.color='#4ade80';}
+  if(correct===5){
+    r.innerHTML='🥳 ¡Orden perfecto!';
+    r.style.color='#4ade80';
+    saveScore('ordenar_sprint', 1, 1);
+  }
   else{r.innerHTML=`🎯 ${correct}/5 en la posición correcta`;r.style.color='#f59e0b';}
 }
 function resetSort(){
@@ -221,6 +227,7 @@ function renderFill(){
     document.getElementById('fillQ').textContent='¡Juego completado!';
     document.getElementById('fillOpts').innerHTML='';
     document.getElementById('fillScore').textContent=`Puntuación: ${fillScore}/${fillData.length}`;
+    saveScore('completar_frase', fillScore, fillData.length);
     return;
   }
   const d=fillData[fillIdx];
@@ -250,5 +257,260 @@ function fillAnswer(i){
 function resetFill(){fillIdx=0;fillScore=0;fillAnswered=false;renderFill();}
 renderFill();
 
+
 // === INIT SORT ===
 resetSort();
+
+// === AUTH LOGIC ===
+let authMode = 'login'; // 'login' o 'signup'
+
+function openAuthModal() {
+  document.getElementById('authModalOverlay').classList.add('open');
+}
+
+function closeAuthModal() {
+  document.getElementById('authModalOverlay').classList.remove('open');
+}
+
+function toggleAuthMode(e) {
+  e.preventDefault();
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  
+  const title = document.getElementById('authTitle');
+  const subtitle = document.getElementById('authSubtitle');
+  const btn = document.getElementById('authBtn');
+  const toggleText = document.getElementById('toggleText');
+  const signupFields = document.querySelectorAll('.signup-only');
+
+  if (authMode === 'signup') {
+    title.textContent = 'Crea tu cuenta';
+    subtitle.textContent = 'Únete a la comunidad y domina Scrum';
+    btn.textContent = 'Registrarse';
+    signupFields.forEach(f => f.style.display = 'block');
+    toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="toggleAuthMode(event)">Inicia sesión</a>';
+  } else {
+    title.textContent = 'Bienvenido de nuevo';
+    subtitle.textContent = 'Ingresa tus credenciales para continuar aprendiendo';
+    btn.textContent = 'Entrar';
+    signupFields.forEach(f => f.style.display = 'none');
+    toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="toggleAuthMode(event)">Regístrate aquí</a>';
+  }
+}
+
+async function handleAuth(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('password').value;
+  const name = document.getElementById('regName').value;
+  const code = document.getElementById('regCode').value;
+  
+  if(!window.firebaseAuth) {
+    alert("Error: Firebase no se ha inicializado correctamente. Revisa tu configuración en index.html");
+    return;
+  }
+  
+  const { auth, db, ref, set, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseAuth;
+
+  try {
+    if (authMode === 'login') {
+      await signInWithEmailAndPassword(auth, email, pass);
+      alert('¡Bienvenido de nuevo!');
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const user = userCredential.user;
+      
+      // GUARDAR PERFIL EN LA DB
+      await set(ref(db, 'users/' + user.uid + '/profile'), {
+        name: name,
+        code: code,
+        email: email,
+        createdAt: new Date().toISOString()
+      });
+      
+      alert('¡Cuenta creada y datos guardados!');
+    }
+    closeAuthModal();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Escuchar cambios en la sesión
+setTimeout(() => {
+  if(!window.firebaseAuth) return;
+  
+  const { auth, db, ref, onValue, onAuthStateChanged, signOut } = window.firebaseAuth;
+  
+  onAuthStateChanged(auth, (user) => {
+    const navItem = document.getElementById('authNavItem');
+    const heroTitle = document.getElementById('heroTitle');
+    
+    if (user) {
+      // 1. Actualización inmediata con datos locales
+      const initialName = user.displayName || user.email.split('@')[0];
+      renderUserNavbar(initialName);
+      heroTitle.innerHTML = `¡Hola, <span class="gradient-text">${initialName.split(' ')[0]}</span>! 👋<br>Aprende Scrum de forma divertida`;
+
+      // 2. Sincronización con la Base de Datos
+      const profileRef = ref(db, 'users/' + user.uid + '/profile');
+      onValue(profileRef, (snapshot) => {
+        const data = snapshot.val();
+        
+        // Verificar si falta el código de grupo
+        if (!data || !data.code) {
+          document.getElementById('completeProfileOverlay').classList.add('open');
+        } else {
+          document.getElementById('completeProfileOverlay').classList.remove('open');
+        }
+
+        if (data && data.name) {
+          renderUserNavbar(data.name);
+          document.getElementById('heroTitle').innerHTML = `¡Hola, <span class="gradient-text">${data.name.split(' ')[0]}</span>! 👋<br>Aprende Scrum de forma divertida`;
+        }
+      }, (error) => {
+        console.error("Error al leer perfil:", error);
+      });
+    } else {
+      // Usuario deslogueado
+      document.getElementById('heroTitle').innerHTML = `Aprende <span class="gradient-text">Scrum</span><br>de forma divertida`;
+      navItem.innerHTML = `<button class="nav-auth-btn" onclick="openAuthModal()">Iniciar Sesión</button>`;
+    }
+  });
+
+  function renderUserNavbar(name) {
+    const navItem = document.getElementById('authNavItem');
+    const initial = name.charAt(0).toUpperCase();
+    navItem.innerHTML = `
+      <div class="user-profile" onclick="openProfileModal()" style="cursor:pointer">
+        <div class="user-avatar">${initial}</div>
+        <span style="font-size:.85rem; font-weight:500">${name}</span>
+        <button onclick="event.stopPropagation(); window.firebaseAuth.signOut(window.firebaseAuth.auth)" title="Cerrar Sesión" style="background:none; border:none; color:var(--pink); cursor:pointer; font-size:1.2rem; margin-left:.5rem">✕</button>
+      </div>
+    `;
+  }
+}, 1000);
+
+// === PROFILE LOGIC ===
+function openProfileModal() {
+  if(!window.firebaseAuth) return;
+  const { auth, db, ref, onValue } = window.firebaseAuth;
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // Cargar datos de perfil y puntajes
+  const userRef = ref(db, 'users/' + user.uid);
+  onValue(userRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const profile = data.profile || {};
+      const scores = data.scores || {};
+      const name = profile.name || user.email.split('@')[0];
+      
+      document.getElementById('pName').textContent = name;
+      document.getElementById('pAvatar').textContent = name.charAt(0).toUpperCase();
+      
+      // CALCULAR NIVELES Y PROGRESO
+      const perfectScores = [
+        (scores.quiz_scrum?.score || 0) >= 6,
+        (scores.verdad_falso?.score || 0) >= 8,
+        (scores.completar_frase?.score || 0) >= 5,
+        (scores.ordenar_sprint?.score || 0) >= 1
+      ].filter(Boolean).length;
+
+      let level = "Novato de Scrum";
+      let progress = (perfectScores / 4) * 100;
+      
+      if(perfectScores === 1) level = "Aprendiz Ágil";
+      if(perfectScores === 2) level = "Practicante Pro";
+      if(perfectScores === 3) level = "Experto en Eventos";
+      if(perfectScores === 4) level = "👑 SCRUM MASTER";
+
+      document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
+      document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
+      document.getElementById('pProgressBar').style.width = `${progress}%`;
+
+      // Efecto Maestro
+      const modalBox = document.querySelector('.profile-modal');
+      if(perfectScores === 4) modalBox.classList.add('master-mode');
+      else modalBox.classList.remove('master-mode');
+      
+      // Mostrar puntajes detallados
+      document.getElementById('pStats').innerHTML = `
+        <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
+        <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
+        <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
+        <div class="stat-item"><span>Ordenar Sprint:</span> <strong>${scores.ordenar_sprint?.score || 0}/1 ${scores.ordenar_sprint?.score >= 1 ? '⭐' : ''}</strong></div>
+      `;
+    }
+  });
+  document.getElementById('profileModalOverlay').classList.add('open');
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModalOverlay').classList.remove('open');
+}
+
+async function handleGoogleLogin() {
+  if(!window.firebaseAuth) {
+    alert("Error: Firebase no se ha inicializado correctamente.");
+    return;
+  }
+  
+  const { auth, GoogleAuthProvider, signInWithPopup } = window.firebaseAuth;
+  const provider = new GoogleAuthProvider();
+  
+  try {
+    await signInWithPopup(auth, provider);
+    alert('¡Sesión iniciada con Google!');
+    closeAuthModal();
+  } catch (error) {
+    console.error(error);
+    alert('Error al iniciar sesión con Google: ' + error.message);
+  }
+}
+
+// === DATABASE LOGIC ===
+async function saveScore(gameName, score, total) {
+  if(!window.firebaseAuth || !window.firebaseAuth.auth.currentUser) return;
+  
+  const { auth, db, ref, set } = window.firebaseAuth;
+  const user = auth.currentUser;
+
+  try {
+    const userRef = ref(db, 'users/' + user.uid + '/scores/' + gameName);
+    await set(userRef, {
+      score: score,
+      total: total,
+      date: new Date().toISOString(),
+      email: user.email
+    });
+    console.log(`Puntaje de ${gameName} guardado en Firebase.`);
+  } catch (error) {
+    console.error("Error al guardar puntaje:", error);
+  }
+}
+
+async function saveGoogleExtraData() {
+  const code = document.getElementById('googleGroupCode').value;
+  if (!code) return alert("Por favor ingresa tu número de grupo");
+  
+  const { auth, db, ref, set } = window.firebaseAuth;
+  const user = auth.currentUser;
+  
+  if (user) {
+    try {
+      await set(ref(db, 'users/' + user.uid + '/profile'), {
+        name: user.displayName || user.email.split('@')[0],
+        code: code,
+        email: user.email,
+        method: 'google',
+        updatedAt: new Date().toISOString()
+      });
+      document.getElementById('completeProfileOverlay').classList.remove('open');
+      alert('¡Perfil completado!');
+    } catch (error) {
+      console.error(error);
+      alert('Error al guardar: ' + error.message);
+    }
+  }
+}
