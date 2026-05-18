@@ -616,7 +616,12 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    let analytics;
+    try {
+      analytics = getAnalytics(app);
+    } catch (e) {
+      console.warn("Firebase Analytics failed to initialize (usually due to an ad-blocker or sandbox context):", e);
+    }
     const auth = getAuth(app);
     const db = getDatabase(app);
     window.firebaseAuth = { auth, db, ref, set, push, onValue, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, analytics };

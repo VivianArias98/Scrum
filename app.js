@@ -346,6 +346,9 @@ setTimeout(() => {
     const heroTitle = document.getElementById('heroTitle');
 
     if (user) {
+      // Sincronizar logros guardados localmente a la base de datos
+      syncLocalScoresToFirebase();
+
       // 1. Actualización inmediata con datos locales
       const initialName = user.displayName || user.email.split('@')[0];
       renderUserNavbar(initialName);
@@ -400,48 +403,68 @@ function openProfileModal() {
   // Cargar datos de perfil y puntajes
   const userRef = ref(db, 'users/' + user.uid);
   onValue(userRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      const profile = data.profile || {};
-      const scores = data.scores || {};
-      const name = profile.name || user.email.split('@')[0];
+    const data = snapshot.val() || {};
+    const profile = data.profile || {};
+    const firebaseScores = data.scores || {};
+    const name = profile.name || user.displayName || user.email.split('@')[0];
 
-      document.getElementById('pName').textContent = name;
-      document.getElementById('pAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('pName').textContent = name;
+    document.getElementById('pAvatar').textContent = name.charAt(0).toUpperCase();
 
-      // CALCULAR NIVELES Y PROGRESO
-      const perfectScores = [
-        (scores.quiz_scrum?.score || 0) >= 6,
-        (scores.verdad_falso?.score || 0) >= 8,
-        (scores.completar_frase?.score || 0) >= 5,
-        (scores.ordenar_sprint?.score || 0) >= 1
-      ].filter(Boolean).length;
-
-      let level = "Novato de Scrum";
-      let progress = (perfectScores / 4) * 100;
-
-      if (perfectScores === 1) level = "Aprendiz Ágil";
-      if (perfectScores === 2) level = "Practicante Pro";
-      if (perfectScores === 3) level = "Experto en Eventos";
-      if (perfectScores === 4) level = "👑 SCRUM MASTER";
-
-      document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
-      document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
-      document.getElementById('pProgressBar').style.width = `${progress}%`;
-
-      // Efecto Maestro
-      const modalBox = document.querySelector('.profile-modal');
-      if (perfectScores === 4) modalBox.classList.add('master-mode');
-      else modalBox.classList.remove('master-mode');
-
-      // Mostrar puntajes detallados
-      document.getElementById('pStats').innerHTML = `
-        <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
-        <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
-        <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
-        <div class="stat-item"><span>Ordenar Sprint:</span> <strong>${scores.ordenar_sprint?.score || 0}/1 ${scores.ordenar_sprint?.score >= 1 ? '⭐' : ''}</strong></div>
-      `;
+    // Obtener logros guardados localmente
+    let localScores = {};
+    try {
+      localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+    } catch (e) {
+      console.error("Error al parsear scrum_scores de localStorage:", e);
     }
+
+    // Combinar puntajes: usar el puntaje más alto obtenido entre Firebase y localStorage
+    const scores = {};
+    const keys = ['quiz_scrum', 'verdad_falso', 'completar_frase', 'ordenar_sprint'];
+    keys.forEach(k => {
+      const fbScore = firebaseScores[k]?.score || 0;
+      const locScore = localScores[k]?.score || 0;
+      const totalQuestions = k === 'quiz_scrum' ? 6 : (k === 'verdad_falso' ? 8 : (k === 'completar_frase' ? 5 : 1));
+      
+      scores[k] = {
+        score: Math.max(fbScore, locScore),
+        total: totalQuestions
+      };
+    });
+
+    // CALCULAR NIVELES Y PROGRESO DE MAESTRÍA
+    const perfectScores = [
+      (scores.quiz_scrum?.score || 0) >= 6,
+      (scores.verdad_falso?.score || 0) >= 8,
+      (scores.completar_frase?.score || 0) >= 5,
+      (scores.ordenar_sprint?.score || 0) >= 1
+    ].filter(Boolean).length;
+
+    let level = "Novato de Scrum";
+    let progress = (perfectScores / 4) * 100;
+
+    if (perfectScores === 1) level = "Aprendiz Ágil";
+    if (perfectScores === 2) level = "Practicante Pro";
+    if (perfectScores === 3) level = "Experto en Eventos";
+    if (perfectScores === 4) level = "👑 SCRUM MASTER";
+
+    document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
+    document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
+    document.getElementById('pProgressBar').style.width = `${progress}%`;
+
+    // Efecto Maestro
+    const modalBox = document.querySelector('.profile-modal');
+    if (perfectScores === 4) modalBox.classList.add('master-mode');
+    else modalBox.classList.remove('master-mode');
+
+    // Mostrar puntajes detallados
+    document.getElementById('pStats').innerHTML = `
+      <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
+      <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
+      <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
+      <div class="stat-item"><span>Ordenar Sprint:</span> <strong>${scores.ordenar_sprint?.score || 0}/1 ${scores.ordenar_sprint?.score >= 1 ? '⭐' : ''}</strong></div>
+    `;
   });
   document.getElementById('profileModalOverlay').classList.add('open');
 }
@@ -470,8 +493,62 @@ async function handleGoogleLogin() {
 }
 
 // === DATABASE LOGIC ===
-async function saveScore(gameName, score, total) {
+async function syncLocalScoresToFirebase() {
   if (!window.firebaseAuth || !window.firebaseAuth.auth.currentUser) return;
+
+  const { auth, db, ref, set } = window.firebaseAuth;
+  const user = auth.currentUser;
+
+  try {
+    let localScores = {};
+    try {
+      localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+
+    for (const gameName in localScores) {
+      const data = localScores[gameName];
+      const userRef = ref(db, 'users/' + user.uid + '/scores/' + gameName);
+      await set(userRef, {
+        score: data.score,
+        total: data.total,
+        date: data.date || new Date().toISOString(),
+        email: user.email
+      });
+      console.log(`Puntaje de ${gameName} sincronizado de localStorage a Firebase.`);
+    }
+  } catch (error) {
+    console.error("Error al sincronizar puntajes locales a Firebase:", error);
+  }
+}
+
+async function saveScore(gameName, score, total) {
+  // 1. Guardar siempre de forma local en localStorage para que el progreso no se pierda jamás
+  try {
+    const localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+    const currentBest = localScores[gameName]?.score || 0;
+    
+    // Guardar solo si es una mejor o igual puntuación
+    if (score >= currentBest) {
+      localScores[gameName] = {
+        score: score,
+        total: total,
+        date: new Date().toISOString()
+      };
+      localStorage.setItem('scrum_scores', JSON.stringify(localScores));
+      console.log(`Logro de ${gameName} guardado localmente: ${score}/${total}`);
+    }
+  } catch (err) {
+    console.error("Error al guardar en localStorage:", err);
+  }
+
+  // 2. Si el usuario está logueado, sincronizarlo inmediatamente a Firebase
+  if (!window.firebaseAuth || !window.firebaseAuth.auth.currentUser) {
+    console.log("Usuario no logueado. El progreso se ha respaldado localmente.");
+    return;
+  }
 
   const { auth, db, ref, set } = window.firebaseAuth;
   const user = auth.currentUser;
@@ -484,9 +561,13 @@ async function saveScore(gameName, score, total) {
       date: new Date().toISOString(),
       email: user.email
     });
-    console.log(`Puntaje de ${gameName} guardado en Firebase.`);
+    console.log(`Puntaje de ${gameName} guardado exitosamente en Firebase.`);
   } catch (error) {
-    console.error("Error al guardar puntaje:", error);
+    console.error("Error al guardar puntaje en Firebase:", error);
+    // Mostrar un aviso informativo si Firebase deniega los permisos
+    if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
+      console.warn("⚠️ Las reglas de seguridad de Firebase impidieron la escritura directa en la base de datos.");
+    }
   }
 }
 
