@@ -346,8 +346,8 @@ setTimeout(() => {
     const heroTitle = document.getElementById('heroTitle');
 
     if (user) {
-      // Sincronizar logros guardados localmente a la base de datos
-      syncLocalScoresToFirebase();
+      // Sincronizar logros guardados localmente a la base de datos, pasando el objeto de usuario directamente para evitar condiciones de carrera
+      syncLocalScoresToFirebase(user);
 
       // 1. Actualización inmediata con datos locales
       const initialName = user.displayName || user.email.split('@')[0];
@@ -394,6 +394,63 @@ setTimeout(() => {
 }, 1000);
 
 // === PROFILE LOGIC ===
+function updateProfileModalUI(firebaseScores, user) {
+  // Obtener logros guardados localmente
+  let localScores = {};
+  try {
+    localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+  } catch (e) {
+    console.error("Error al parsear scrum_scores de localStorage:", e);
+  }
+
+  // Combinar puntajes: usar el puntaje más alto obtenido entre Firebase y localStorage
+  const scores = {};
+  const keys = ['quiz_scrum', 'verdad_falso', 'completar_frase', 'ordenar_sprint'];
+  keys.forEach(k => {
+    const fbScore = firebaseScores[k]?.score || 0;
+    const locScore = localScores[k]?.score || 0;
+    const totalQuestions = k === 'quiz_scrum' ? 6 : (k === 'verdad_falso' ? 8 : (k === 'completar_frase' ? 5 : 1));
+    
+    scores[k] = {
+      score: Math.max(fbScore, locScore),
+      total: totalQuestions
+    };
+  });
+
+  // CALCULAR NIVELES Y PROGRESO DE MAESTRÍA
+  const perfectScores = [
+    (scores.quiz_scrum?.score || 0) >= 6,
+    (scores.verdad_falso?.score || 0) >= 8,
+    (scores.completar_frase?.score || 0) >= 5,
+    (scores.ordenar_sprint?.score || 0) >= 1
+  ].filter(Boolean).length;
+
+  let level = "Novato de Scrum";
+  let progress = (perfectScores / 4) * 100;
+
+  if (perfectScores === 1) level = "Aprendiz Ágil";
+  if (perfectScores === 2) level = "Practicante Pro";
+  if (perfectScores === 3) level = "Experto en Eventos";
+  if (perfectScores === 4) level = "👑 SCRUM MASTER";
+
+  document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
+  document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
+  document.getElementById('pProgressBar').style.width = `${progress}%`;
+
+  // Efecto Maestro
+  const modalBox = document.querySelector('.profile-modal');
+  if (perfectScores === 4) modalBox.classList.add('master-mode');
+  else modalBox.classList.remove('master-mode');
+
+  // Mostrar puntajes detallados
+  document.getElementById('pStats').innerHTML = `
+    <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
+    <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
+    <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
+    <div class="stat-item"><span>Ordenar Sprint:</span> <strong>${scores.ordenar_sprint?.score || 0}/1 ${scores.ordenar_sprint?.score >= 1 ? '⭐' : ''}</strong></div>
+  `;
+}
+
 function openProfileModal() {
   if (!window.firebaseAuth) return;
   const { auth, db, ref, onValue } = window.firebaseAuth;
@@ -411,60 +468,15 @@ function openProfileModal() {
     document.getElementById('pName').textContent = name;
     document.getElementById('pAvatar').textContent = name.charAt(0).toUpperCase();
 
-    // Obtener logros guardados localmente
-    let localScores = {};
-    try {
-      localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
-    } catch (e) {
-      console.error("Error al parsear scrum_scores de localStorage:", e);
-    }
-
-    // Combinar puntajes: usar el puntaje más alto obtenido entre Firebase y localStorage
-    const scores = {};
-    const keys = ['quiz_scrum', 'verdad_falso', 'completar_frase', 'ordenar_sprint'];
-    keys.forEach(k => {
-      const fbScore = firebaseScores[k]?.score || 0;
-      const locScore = localScores[k]?.score || 0;
-      const totalQuestions = k === 'quiz_scrum' ? 6 : (k === 'verdad_falso' ? 8 : (k === 'completar_frase' ? 5 : 1));
-      
-      scores[k] = {
-        score: Math.max(fbScore, locScore),
-        total: totalQuestions
-      };
-    });
-
-    // CALCULAR NIVELES Y PROGRESO DE MAESTRÍA
-    const perfectScores = [
-      (scores.quiz_scrum?.score || 0) >= 6,
-      (scores.verdad_falso?.score || 0) >= 8,
-      (scores.completar_frase?.score || 0) >= 5,
-      (scores.ordenar_sprint?.score || 0) >= 1
-    ].filter(Boolean).length;
-
-    let level = "Novato de Scrum";
-    let progress = (perfectScores / 4) * 100;
-
-    if (perfectScores === 1) level = "Aprendiz Ágil";
-    if (perfectScores === 2) level = "Practicante Pro";
-    if (perfectScores === 3) level = "Experto en Eventos";
-    if (perfectScores === 4) level = "👑 SCRUM MASTER";
-
-    document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
-    document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
-    document.getElementById('pProgressBar').style.width = `${progress}%`;
-
-    // Efecto Maestro
-    const modalBox = document.querySelector('.profile-modal');
-    if (perfectScores === 4) modalBox.classList.add('master-mode');
-    else modalBox.classList.remove('master-mode');
-
-    // Mostrar puntajes detallados
-    document.getElementById('pStats').innerHTML = `
-      <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
-      <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
-      <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
-      <div class="stat-item"><span>Ordenar Sprint:</span> <strong>${scores.ordenar_sprint?.score || 0}/1 ${scores.ordenar_sprint?.score >= 1 ? '⭐' : ''}</strong></div>
-    `;
+    updateProfileModalUI(firebaseScores, user);
+  }, (error) => {
+    console.error("Error al leer de Firebase en openProfileModal:", error);
+    // Usar datos locales si hay error de base de datos o de permisos
+    const name = user.displayName || user.email.split('@')[0];
+    document.getElementById('pName').textContent = name;
+    document.getElementById('pAvatar').textContent = name.charAt(0).toUpperCase();
+    
+    updateProfileModalUI({}, user);
   });
   document.getElementById('profileModalOverlay').classList.add('open');
 }
@@ -493,11 +505,12 @@ async function handleGoogleLogin() {
 }
 
 // === DATABASE LOGIC ===
-async function syncLocalScoresToFirebase() {
-  if (!window.firebaseAuth || !window.firebaseAuth.auth.currentUser) return;
+async function syncLocalScoresToFirebase(currentUser) {
+  if (!window.firebaseAuth) return;
 
   const { auth, db, ref, set } = window.firebaseAuth;
-  const user = auth.currentUser;
+  const user = currentUser || auth.currentUser;
+  if (!user) return;
 
   try {
     let localScores = {};
