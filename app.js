@@ -297,12 +297,44 @@ function toggleAuthMode(e) {
   }
 }
 
+function getFriendlyErrorMessage(error) {
+  if (!error) return 'Ocurrió un error inesperado.';
+  const code = error.code || '';
+  const msg = error.message || '';
+  
+  if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use')) {
+    return 'El correo electrónico ya está registrado. Si el registro falló anteriormente a mitad de camino, intenta iniciar sesión directamente con esta cuenta.';
+  }
+  if (code === 'auth/weak-password' || msg.includes('weak-password')) {
+    return 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
+  }
+  if (code === 'auth/invalid-email' || msg.includes('invalid-email')) {
+    return 'El formato del correo electrónico no es válido.';
+  }
+  if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+    return 'El inicio de sesión por Correo y Contraseña está desactivado en tu consola de Firebase. Debes activarlo en Authentication > Sign-in method.';
+  }
+  if (code === 'auth/user-not-found' || msg.includes('user-not-found')) {
+    return 'No se encontró ningún usuario con este correo electrónico.';
+  }
+  if (code === 'auth/wrong-password' || msg.includes('wrong-password')) {
+    return 'La contraseña es incorrecta.';
+  }
+  if (code === 'auth/invalid-credential' || msg.includes('invalid-credential')) {
+    return 'Credenciales inválidas. Por favor verifica tu correo y contraseña.';
+  }
+  if (msg.includes('permission_denied') || code.includes('PERMISSION_DENIED')) {
+    return 'Error de permisos en Firebase Realtime Database. Debes configurar las Reglas de Seguridad en tu consola de Firebase para permitir lecturas y escrituras.';
+  }
+  return error.message || 'Ocurrió un error inesperado.';
+}
+
 async function handleAuth(e) {
   e.preventDefault();
-  const email = document.getElementById('email').value;
+  const email = document.getElementById('email').value.trim();
   const pass = document.getElementById('password').value;
-  const name = document.getElementById('regName').value;
-  const code = document.getElementById('regCode').value;
+  const name = document.getElementById('regName').value.trim();
+  const code = document.getElementById('regCode').value.trim();
 
   if (!window.firebaseAuth) {
     alert("Error: Firebase no se ha inicializado correctamente. Revisa tu configuración en index.html");
@@ -313,21 +345,35 @@ async function handleAuth(e) {
 
   try {
     if (authMode === 'login') {
-      await signInWithEmailAndPassword(auth, email, pass);
-      alert('¡Bienvenido de nuevo!');
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        alert('¡Bienvenido de nuevo!');
+      } catch (loginError) {
+        throw new Error(getFriendlyErrorMessage(loginError));
+      }
     } else {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      let userCredential;
+      try {
+        userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      } catch (signUpError) {
+        throw new Error(getFriendlyErrorMessage(signUpError));
+      }
+      
       const user = userCredential.user;
 
-      // GUARDAR PERFIL EN LA DB
-      await set(ref(db, 'users/' + user.uid + '/profile'), {
-        name: name,
-        code: code,
-        email: email,
-        createdAt: new Date().toISOString()
-      });
-
-      alert('¡Cuenta creada y datos guardados!');
+      // GUARDAR PERFIL EN LA DB (si falla por permisos de base de datos, no bloqueamos la sesión del usuario)
+      try {
+        await set(ref(db, 'users/' + user.uid + '/profile'), {
+          name: name,
+          code: code,
+          email: email,
+          createdAt: new Date().toISOString()
+        });
+        alert('¡Cuenta creada y datos guardados exitosamente!');
+      } catch (dbError) {
+        console.error("Error al guardar perfil en la base de datos:", dbError);
+        alert('¡Cuenta creada con éxito! Sin embargo, tus datos de perfil no se pudieron guardar en la base de datos debido a que las Reglas de Seguridad de Firebase Realtime Database están bloqueadas. Tu sesión se iniciará de todos modos.');
+      }
     }
     closeAuthModal();
   } catch (error) {
@@ -604,7 +650,7 @@ async function saveGoogleExtraData() {
       alert('¡Perfil completado!');
     } catch (error) {
       console.error(error);
-      alert('Error al guardar: ' + error.message);
+      alert('Error al guardar: ' + getFriendlyErrorMessage(error));
     }
   }
 }
