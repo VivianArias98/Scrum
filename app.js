@@ -570,16 +570,16 @@ async function handleGoogleLogin() {
     return;
   }
 
-  const { auth, GoogleAuthProvider, signInWithRedirect } = window.firebaseAuth;
+  const { auth, GoogleAuthProvider, signInWithPopup } = window.firebaseAuth;
   const provider = new GoogleAuthProvider();
 
   try {
-    // Usar signInWithRedirect evita los errores de Cross-Origin-Opener-Policy (COOP) en GitHub Pages
-    // ya que redirige la página completa en lugar de intentar abrir una ventana emergente.
-    await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
+    alert('¡Sesión iniciada con Google!');
+    closeAuthModal();
   } catch (error) {
     console.error(error);
-    alert('Error al redirigir a Google: ' + error.message);
+    alert('Error al iniciar sesión con Google: ' + error.message);
   }
 }
 
