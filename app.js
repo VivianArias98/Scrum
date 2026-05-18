@@ -372,7 +372,7 @@ async function handleAuth(e) {
         alert('¡Cuenta creada y datos guardados exitosamente!');
       } catch (dbError) {
         console.error("Error al guardar perfil en la base de datos:", dbError);
-        alert('¡Cuenta creada con éxito! Sin embargo, tus datos de perfil no se pudieron guardar en la base de datos debido a que las Reglas de Seguridad de Firebase Realtime Database están bloqueadas. Tu sesión se iniciará de todos modos.');
+        alert('¡Cuenta creada con éxito! Sin embargo, tus datos de perfil no se pudieron guardar en la base de datos debido a que las Reglas de Seguridad de Firebase Realtime Database están configuradas para denegar escritura. Tu sesión se iniciará de todos modos.');
       }
     }
     closeAuthModal();
@@ -381,18 +381,16 @@ async function handleAuth(e) {
   }
 }
 
-// Escuchar cambios en la sesión
-setTimeout(() => {
-  if (!window.firebaseAuth) return;
-
-  const { auth, db, ref, onValue, onAuthStateChanged, signOut } = window.firebaseAuth;
+// Escuchar cambios en la sesión de forma robusta con polling para evitar condiciones de carrera en la carga de Firebase
+function setupFirebaseListeners() {
+  const { auth, db, ref, onValue, onAuthStateChanged } = window.firebaseAuth;
 
   onAuthStateChanged(auth, (user) => {
     const navItem = document.getElementById('authNavItem');
     const heroTitle = document.getElementById('heroTitle');
 
     if (user) {
-      // Sincronizar logros guardados localmente a la base de datos, pasando el objeto de usuario directamente para evitar condiciones de carrera
+      // Sincronizar logros guardados localmente a la base de datos
       syncLocalScoresToFirebase(user);
 
       // 1. Actualización inmediata con datos locales
@@ -437,17 +435,52 @@ setTimeout(() => {
       </div>
     `;
   }
-}, 1000);
+}
+
+function initFirebaseSessionListener() {
+  if (window.firebaseAuth) {
+    setupFirebaseListeners();
+  } else {
+    let retries = 0;
+    const interval = setInterval(() => {
+      retries++;
+      if (window.firebaseAuth) {
+        clearInterval(interval);
+        setupFirebaseListeners();
+      } else if (retries >= 100) {
+        clearInterval(interval);
+        console.error("⚠️ Firebase tardó más de 10 segundos en cargarse. Inicialización abortada.");
+      }
+    }, 100);
+  }
+}
+
+// Iniciar detector de sesión
+initFirebaseSessionListener();
 
 // === PROFILE LOGIC ===
-function updateProfileModalUI(firebaseScores, user) {
-  // Obtener logros guardados localmente
+function getLocalScores() {
   let localScores = {};
   try {
-    localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+    const stored = localStorage.getItem('scrum_scores');
+    if (stored) {
+      if (stored === '[object Object]') {
+        console.warn("⚠️ Dato corrupto '[object Object]' detectado en localStorage. Autocorrigiendo...");
+        localStorage.setItem('scrum_scores', '{}');
+        return {};
+      }
+      localScores = JSON.parse(stored);
+    }
   } catch (e) {
-    console.error("Error al parsear scrum_scores de localStorage:", e);
+    console.error("Error al recuperar logros locales de localStorage:", e);
+    localStorage.setItem('scrum_scores', '{}');
   }
+  return localScores || {};
+}
+
+function updateProfileModalUI(firebaseScores, user) {
+  // Obtener logros guardados localmente de forma segura y autocorregible
+  const localScores = getLocalScores();
 
   // Combinar puntajes: usar el puntaje más alto obtenido entre Firebase y localStorage
   const scores = {};
@@ -559,24 +592,23 @@ async function syncLocalScoresToFirebase(currentUser) {
   if (!user) return;
 
   try {
-    let localScores = {};
-    try {
-      localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
-    } catch (e) {
-      console.error(e);
-      return;
-    }
+    const localScores = getLocalScores();
 
     for (const gameName in localScores) {
-      const data = localScores[gameName];
-      const userRef = ref(db, 'users/' + user.uid + '/scores/' + gameName);
-      await set(userRef, {
-        score: data.score,
-        total: data.total,
-        date: data.date || new Date().toISOString(),
-        email: user.email
-      });
-      console.log(`Puntaje de ${gameName} sincronizado de localStorage a Firebase.`);
+      try {
+        const data = localScores[gameName];
+        if (!data) continue;
+        const userRef = ref(db, 'users/' + user.uid + '/scores/' + gameName);
+        await set(userRef, {
+          score: Number(data.score) || 0,
+          total: Number(data.total) || 0,
+          date: data.date || new Date().toISOString(),
+          email: user.email || null
+        });
+        console.log(`Puntaje de ${gameName} sincronizado de localStorage a Firebase.`);
+      } catch (itemError) {
+        console.error(`Error al sincronizar puntaje individual de ${gameName}:`, itemError);
+      }
     }
   } catch (error) {
     console.error("Error al sincronizar puntajes locales a Firebase:", error);
@@ -586,14 +618,14 @@ async function syncLocalScoresToFirebase(currentUser) {
 async function saveScore(gameName, score, total) {
   // 1. Guardar siempre de forma local en localStorage para que el progreso no se pierda jamás
   try {
-    const localScores = JSON.parse(localStorage.getItem('scrum_scores') || '{}');
+    const localScores = getLocalScores();
     const currentBest = localScores[gameName]?.score || 0;
     
     // Guardar solo si es una mejor o igual puntuación
     if (score >= currentBest) {
       localScores[gameName] = {
-        score: score,
-        total: total,
+        score: Number(score) || 0,
+        total: Number(total) || 0,
         date: new Date().toISOString()
       };
       localStorage.setItem('scrum_scores', JSON.stringify(localScores));
@@ -615,10 +647,10 @@ async function saveScore(gameName, score, total) {
   try {
     const userRef = ref(db, 'users/' + user.uid + '/scores/' + gameName);
     await set(userRef, {
-      score: score,
-      total: total,
+      score: Number(score) || 0,
+      total: Number(total) || 0,
       date: new Date().toISOString(),
-      email: user.email
+      email: user.email || null
     });
     console.log(`Puntaje de ${gameName} guardado exitosamente en Firebase.`);
   } catch (error) {
