@@ -602,21 +602,24 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDX2BSJ5SOrG_jij1jX-JVm7kuaoXf4IJ8",
-      authDomain: "clinicaodontologica-d89c3.firebaseapp.com",
-      databaseURL: "https://clinicaodontologica-d89c3-default-rtdb.firebaseio.com",
-      projectId: "clinicaodontologica-d89c3",
-      storageBucket: "clinicaodontologica-d89c3.firebasestorage.app",
-      messagingSenderId: "215478980795",
-      appId: "1:215478980795:web:a058e6891166683ccdd99e"
+      apiKey: "AIzaSyD9yo7LsdfP336y7opxIIp71orS5XQGeTw",
+      authDomain: "scrum-vivian.firebaseapp.com",
+      databaseURL: "https://scrum-vivian-default-rtdb.firebaseio.com",
+      projectId: "scrum-vivian",
+      storageBucket: "scrum-vivian.firebasestorage.app",
+      messagingSenderId: "703846224158",
+      appId: "1:703846224158:web:fa68e75ee9953c41b2b90f",
+      measurementId: "G-26N3JV2FWH"
     };
 
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getDatabase(app);
-    window.firebaseAuth = { auth, db, ref, set, push, onValue, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup };
+    window.firebaseAuth = { auth, db, ref, set, push, onValue, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, analytics };
   </script>
   <script src="app.js?v=1.0.3"></script>
 </body>
