@@ -687,6 +687,76 @@ async function saveGoogleExtraData() {
   }
 }
 
+async function runAchievementsDiagnostic() {
+  let report = "=== DIAGNÓSTICO DE LOGROS Y CONEXIÓN ===\n\n";
+
+  // 1. Verificar si Firebase está inicializado
+  if (!window.firebaseAuth) {
+    report += "❌ ERROR: Firebase no se ha cargado. Revisa tu conexión a internet o los scripts.\n";
+    alert(report);
+    return;
+  }
+  report += "✅ Firebase cargado correctamente.\n";
+
+  const { auth, db, ref, set } = window.firebaseAuth;
+  const user = auth.currentUser;
+
+  // 2. Verificar usuario logueado
+  if (!user) {
+    report += "❌ ERROR: No hay ningún usuario logueado en la sesión de Firebase.\n";
+    report += "👉 SOLUCIÓN: Cierra este modal e inicia sesión con Google o Correo.\n";
+    alert(report);
+    return;
+  }
+  report += `✅ Usuario autenticado:\n   - UID: ${user.uid}\n   - Email: ${user.email || 'No disponible'}\n   - Nombre: ${user.displayName || 'No disponible'}\n`;
+
+  // 3. Probar disponibilidad de LocalStorage
+  try {
+    localStorage.setItem('scrum_test_key', 'test_ok');
+    const testVal = localStorage.getItem('scrum_test_key');
+    if (testVal === 'test_ok') {
+      report += "✅ LocalStorage está habilitado y funcionando.\n";
+      localStorage.removeItem('scrum_test_key');
+    } else {
+      report += "❌ ERROR: LocalStorage retornó un dato incorrecto.\n";
+    }
+  } catch (lsErr) {
+    report += `❌ ERROR de LocalStorage: ${lsErr.message} (¿Estás usando un navegador muy restrictivo o en modo incógnito rígido?)\n`;
+  }
+
+  // 4. Leer logros guardados localmente
+  try {
+    const rawLocal = localStorage.getItem('scrum_scores');
+    if (rawLocal) {
+      report += `📊 Logros en LocalStorage: ${rawLocal}\n`;
+    } else {
+      report += "📊 Logros en LocalStorage: [Vacío] (No has terminado ningún juego localmente en este navegador).\n";
+    }
+  } catch (e) {
+    report += `❌ ERROR al leer LocalStorage: ${e.message}\n`;
+  }
+
+  // 5. Testear escritura y reglas en la base de datos de Firebase
+  report += "\nProbando escritura en Firebase Realtime Database...\n";
+  try {
+    const testRef = ref(db, 'users/' + user.uid + '/scores/diagnostic_test');
+    await set(testRef, {
+      lastTested: new Date().toISOString(),
+      status: "success",
+      email: user.email || null
+    });
+    report += "✅ Firebase Database: ¡Escritura exitosa! Tus reglas permiten guardar progresos perfectamente.\n";
+  } catch (dbErr) {
+    console.error("Error diagnóstico de base de datos:", dbErr);
+    report += `❌ ERROR en Firebase Realtime Database: ${dbErr.message}\n`;
+    if (dbErr.message.toLowerCase().includes("permission_denied") || dbErr.code === 'PERMISSION_DENIED') {
+      report += "👉 DETALLE: Las reglas de seguridad siguen rechazando la escritura. ¿Publicaste los cambios en tu Consola de Firebase?\n";
+    }
+  }
+
+  alert(report);
+}
+
 // === EXPOSE FUNCTIONS TO WINDOW FOR HTML ONCLICK COMPATIBILITY ===
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
@@ -709,3 +779,4 @@ window.checkSort = checkSort;
 window.resetSort = resetSort;
 window.fillAnswer = fillAnswer;
 window.resetFill = resetFill;
+window.runAchievementsDiagnostic = runAchievementsDiagnostic;
