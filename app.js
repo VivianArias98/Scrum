@@ -74,7 +74,11 @@ function checkMatch() {
     });
   });
   const r = document.getElementById('matchResult');
-  if (score === 6) { r.innerHTML = '🥳 ¡Perfecto! Todas correctas'; r.style.color = '#4ade80'; }
+  if (score === 6) {
+    r.innerHTML = '🥳 ¡Perfecto! Todas correctas';
+    r.style.color = '#4ade80';
+    saveScore('relacionar_columnas', 1, 1);
+  }
   else { r.innerHTML = `🎯 ${score}/6 correctas. Revisa las marcadas en rojo.`; r.style.color = '#f59e0b'; }
 }
 function resetMatch() {
@@ -484,7 +488,7 @@ function updateProfileModalUI(firebaseScores, user) {
 
   // Combinar puntajes: usar el puntaje más alto obtenido entre Firebase y localStorage
   const scores = {};
-  const keys = ['quiz_scrum', 'verdad_falso', 'completar_frase', 'ordenar_sprint'];
+  const keys = ['quiz_scrum', 'verdad_falso', 'completar_frase', 'ordenar_sprint', 'relacionar_columnas'];
   keys.forEach(k => {
     const fbScore = firebaseScores[k]?.score || 0;
     const locScore = localScores[k]?.score || 0;
@@ -501,16 +505,18 @@ function updateProfileModalUI(firebaseScores, user) {
     (scores.quiz_scrum?.score || 0) >= 6,
     (scores.verdad_falso?.score || 0) >= 8,
     (scores.completar_frase?.score || 0) >= 5,
-    (scores.ordenar_sprint?.score || 0) >= 1
+    (scores.ordenar_sprint?.score || 0) >= 1,
+    (scores.relacionar_columnas?.score || 0) >= 1
   ].filter(Boolean).length;
 
   let level = "Novato de Scrum";
-  let progress = (perfectScores / 4) * 100;
+  let progress = (perfectScores / 5) * 100;
 
   if (perfectScores === 1) level = "Aprendiz Ágil";
   if (perfectScores === 2) level = "Practicante Pro";
-  if (perfectScores === 3) level = "Experto en Eventos";
-  if (perfectScores === 4) level = "👑 SCRUM MASTER";
+  if (perfectScores === 3) level = "Experto de Roles";
+  if (perfectScores === 4) level = "Experto en Eventos";
+  if (perfectScores === 5) level = "👑 SCRUM MASTER";
 
   document.getElementById('pLevelBadge').textContent = `Rango: ${level}`;
   document.getElementById('pProgressText').textContent = `${Math.round(progress)}%`;
@@ -518,11 +524,12 @@ function updateProfileModalUI(firebaseScores, user) {
 
   // Efecto Maestro
   const modalBox = document.querySelector('.profile-modal');
-  if (perfectScores === 4) modalBox.classList.add('master-mode');
+  if (perfectScores === 5) modalBox.classList.add('master-mode');
   else modalBox.classList.remove('master-mode');
 
   // Mostrar puntajes detallados
   document.getElementById('pStats').innerHTML = `
+    <div class="stat-item"><span>Relacionar Columnas:</span> <strong>${scores.relacionar_columnas?.score || 0}/1 ${scores.relacionar_columnas?.score >= 1 ? '⭐' : ''}</strong></div>
     <div class="stat-item"><span>Quiz Scrum:</span> <strong>${scores.quiz_scrum?.score || 0}/6 ${scores.quiz_scrum?.score >= 6 ? '⭐' : ''}</strong></div>
     <div class="stat-item"><span>Verdadero/Falso:</span> <strong>${scores.verdad_falso?.score || 0}/8 ${scores.verdad_falso?.score >= 8 ? '⭐' : ''}</strong></div>
     <div class="stat-item"><span>Completar Frase:</span> <strong>${scores.completar_frase?.score || 0}/5 ${scores.completar_frase?.score >= 5 ? '⭐' : ''}</strong></div>
