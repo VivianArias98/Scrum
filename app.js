@@ -444,6 +444,7 @@ function setupFirebaseListeners() {
 function initFirebaseSessionListener() {
   if (window.firebaseAuth) {
     setupFirebaseListeners();
+    checkAdminAccess();
   } else {
     let retries = 0;
     const interval = setInterval(() => {
@@ -451,6 +452,7 @@ function initFirebaseSessionListener() {
       if (window.firebaseAuth) {
         clearInterval(interval);
         setupFirebaseListeners();
+        checkAdminAccess();
       } else if (retries >= 100) {
         clearInterval(interval);
         console.error("⚠️ Firebase tardó más de 10 segundos en cargarse. Inicialización abortada.");
@@ -761,3 +763,171 @@ window.resetSort = resetSort;
 window.fillAnswer = fillAnswer;
 window.resetFill = resetFill;
 window.runAchievementsDiagnostic = runAchievementsDiagnostic;
+window.filterAdminTable = filterAdminTable;
+window.exportAdminDataToCSV = exportAdminDataToCSV;
+
+// === SECCIÓN DE ADMINISTRACIÓN Y REPORTES ===
+let allUsersList = [];
+
+function checkAdminAccess() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('info') || urlParams.has('infose')) {
+    const adminSec = document.getElementById('adminSection');
+    if (adminSec) adminSec.style.display = 'block';
+    loadAdminData();
+  }
+}
+
+function loadAdminData() {
+  if (!window.firebaseAuth) {
+    setTimeout(loadAdminData, 500);
+    return;
+  }
+
+  const { db, ref, onValue } = window.firebaseAuth;
+  const usersRef = ref(db, 'users');
+
+  onValue(usersRef, (snapshot) => {
+    const usersData = snapshot.val() || {};
+    renderAdminTable(usersData);
+  }, (error) => {
+    console.error("Error al cargar datos de administración:", error);
+    const tbody = document.getElementById('adminTableBody');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #f87171; padding: 2rem;">❌ Error al leer la base de datos: ${error.message}</td></tr>`;
+    }
+  });
+}
+
+function renderAdminTable(usersData) {
+  const tbody = document.getElementById('adminTableBody');
+  if (!tbody) return;
+
+  allUsersList = [];
+  
+  for (const uid in usersData) {
+    const userObj = usersData[uid];
+    if (!userObj) continue;
+
+    const profile = userObj.profile || {};
+    if (!profile.email && !profile.name) continue;
+
+    const email = profile.email || 'Sin correo';
+    const name = profile.name || 'Usuario sin nombre';
+    const group = profile.code || 'Sin grupo';
+    const scores = userObj.scores || {};
+
+    const columnsScore = scores.relacionar_columnas?.score || 0;
+    const quizScore = scores.quiz_scrum?.score || 0;
+    const vfScore = scores.verdad_falso?.score || 0;
+    const fillScore = scores.completar_frase?.score || 0;
+    const sortScore = scores.ordenar_sprint?.score || 0;
+
+    const perfectScores = [
+      columnsScore >= 1,
+      quizScore >= 6,
+      vfScore >= 8,
+      fillScore >= 5,
+      sortScore >= 1
+    ].filter(Boolean).length;
+
+    const masteryProgress = Math.round((perfectScores / 5) * 100);
+
+    allUsersList.push({
+      uid,
+      name,
+      email,
+      group,
+      masteryProgress,
+      columnsScore,
+      quizScore,
+      vfScore,
+      fillScore,
+      sortScore
+    });
+  }
+
+  allUsersList.sort((a, b) => a.name.localeCompare(b.name));
+  displayFilteredUsers(allUsersList);
+}
+
+function displayFilteredUsers(list) {
+  const tbody = document.getElementById('adminTableBody');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text2); padding: 2rem;">No se encontraron registros de estudiantes.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(u => {
+    return `
+      <tr>
+        <td>
+          <div style="font-weight: 600; color: #fff;">${u.name}</div>
+          <div style="font-size: 0.75rem; color: var(--text2);">${u.email}</div>
+        </td>
+        <td style="font-weight: 500; color: var(--text1);">${u.group}</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 50px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
+              <div style="width: ${u.masteryProgress}%; height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink));"></div>
+            </div>
+            <span style="font-size: 0.8rem; font-weight: 600; color: var(--pink);">${u.masteryProgress}%</span>
+          </div>
+        </td>
+        <td style="text-align: center;">${u.columnsScore}/1 ${u.columnsScore >= 1 ? '⭐' : ''}</td>
+        <td style="text-align: center;">${u.quizScore}/6 ${u.quizScore >= 6 ? '⭐' : ''}</td>
+        <td style="text-align: center;">${u.vfScore}/8 ${u.vfScore >= 8 ? '⭐' : ''}</td>
+        <td style="text-align: center;">${u.fillScore}/5 ${u.fillScore >= 5 ? '⭐' : ''}</td>
+        <td style="text-align: center;">${u.sortScore}/1 ${u.sortScore >= 1 ? '⭐' : ''}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterAdminTable() {
+  const search = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+  if (!search) {
+    displayFilteredUsers(allUsersList);
+    return;
+  }
+
+  const filtered = allUsersList.filter(u => 
+    u.name.toLowerCase().includes(search) || 
+    u.email.toLowerCase().includes(search) || 
+    u.group.toLowerCase().includes(search)
+  );
+
+  displayFilteredUsers(filtered);
+}
+
+function exportAdminDataToCSV() {
+  if (allUsersList.length === 0) return alert("No hay datos para exportar");
+
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += "Nombre,Correo,Grupo,Progreso Masteria (%),Relacionar Columnas (1),Quiz Scrum (6),Verdadero/Falso (8),Completar Frase (5),Ordenar Sprint (1)\n";
+
+  allUsersList.forEach(u => {
+    const row = [
+      `"${u.name}"`,
+      `"${u.email}"`,
+      `"${u.group}"`,
+      u.masteryProgress,
+      u.columnsScore,
+      u.quizScore,
+      u.vfScore,
+      u.fillScore,
+      u.sortScore
+    ].join(",");
+    csvContent += row + "\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Reporte_Progreso_Scrum_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

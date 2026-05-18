@@ -565,7 +565,6 @@
           <div class="stat-item"><span>V/F:</span> <strong>-</strong></div>
           <div class="stat-item"><span>Frases:</span> <strong>-</strong></div>
         </div>
-        <button onclick="runAchievementsDiagnostic()" class="btn-check" style="margin-top: 1.2rem; background: linear-gradient(135deg, var(--purple), var(--pink)); border: none; padding: 0.6rem 1rem; border-radius: 8px; color: white; font-size: 0.85rem; cursor: pointer; width: 100%; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.25);">🔍 Diagnosticar Conexión y Logros</button>
       </div>
     </div>
   </div>
@@ -576,7 +575,50 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       <div class="modal-content" id="modalContent"></div>
     </div>
-  </div>
+  </div>  <!-- SECCIÓN DE ADMINISTRACIÓN (PROGRESO GLOBAL) -->
+  <section id="adminSection" class="section section-dark" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5rem;">
+    <div class="container">
+      <div class="section-tag">Administración</div>
+      <h2 class="section-title">Progreso <span class="gradient-text">Global de Alumnos</span></h2>
+      <p class="section-desc">Monitorea en tiempo real el avance y las calificaciones de todos los alumnos registrados.</p>
+      
+      <div class="game-box" style="max-width: 100%; margin-top: 2rem;">
+        <div class="admin-controls" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <input type="text" id="adminSearchInput" oninput="filterAdminTable()" placeholder="🔍 Buscar estudiante por nombre, correo o grupo..." style="flex: 1; min-width: 250px; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s ease;">
+          <button onclick="exportAdminDataToCSV()" class="btn-check" style="background: linear-gradient(135deg, #10B981, #059669); border: none; padding: 0.75rem 1.5rem; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);">📥 Exportar a Excel (CSV)</button>
+        </div>
+        
+        <div class="table-wrap">
+          <table class="scrum-table" id="adminTable">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Grupo</th>
+                <th>Mastería</th>
+                <th style="text-align: center;">Columnas</th>
+                <th style="text-align: center;">Quiz</th>
+                <th style="text-align: center;">V / F</th>
+                <th style="text-align: center;">Frase</th>
+                <th style="text-align: center;">Sprint</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; color: var(--text2); padding: 2rem;">Cargando datos de estudiantes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    #adminSearchInput:focus {
+      border-color: var(--pink) !important;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.25);
+    }
+  </style>
 
   <!-- FOOTER -->
   <footer class="footer">
