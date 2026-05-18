@@ -735,6 +735,7 @@ window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 window.toggleAuthMode = toggleAuthMode;
 window.handleGoogleLogin = handleGoogleLogin;
+window.handleAuth = handleAuth;
 window.saveGoogleExtraData = saveGoogleExtraData;
 window.openProfileModal = openProfileModal;
 window.closeProfileModal = closeProfileModal;
